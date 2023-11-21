@@ -117,3 +117,5 @@ dmypy.json
 .pyre/
 
 index.html
+
+collected_data
