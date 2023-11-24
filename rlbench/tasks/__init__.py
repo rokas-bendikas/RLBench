@@ -51,8 +51,7 @@ from rlbench.tasks.pour_from_cup_to_cup import PourFromCupToCup
 from rlbench.tasks.press_switch import PressSwitch
 from rlbench.tasks.push_button import PushButton
 from rlbench.tasks.push_buttons import PushButtons
-from rlbench.tasks.put_all_groceries_in_cupboard import \
-    PutAllGroceriesInCupboard
+from rlbench.tasks.put_all_groceries_in_cupboard import PutAllGroceriesInCupboard
 from rlbench.tasks.put_books_on_bookshelf import PutBooksOnBookshelf
 from rlbench.tasks.put_bottle_in_fridge import PutBottleInFridge
 from rlbench.tasks.put_groceries_in_cupboard import PutGroceriesInCupboard
@@ -60,14 +59,12 @@ from rlbench.tasks.put_item_in_drawer import PutItemInDrawer
 from rlbench.tasks.put_knife_in_knife_block import PutKnifeInKnifeBlock
 from rlbench.tasks.put_knife_on_chopping_board import PutKnifeOnChoppingBoard
 from rlbench.tasks.put_money_in_safe import PutMoneyInSafe
-from rlbench.tasks.put_plate_in_colored_dish_rack import \
-    PutPlateInColoredDishRack
+from rlbench.tasks.put_plate_in_colored_dish_rack import PutPlateInColoredDishRack
 from rlbench.tasks.put_rubbish_in_bin import PutRubbishInBin
 from rlbench.tasks.put_shoes_in_box import PutShoesInBox
 from rlbench.tasks.put_toilet_roll_on_stand import PutToiletRollOnStand
 from rlbench.tasks.put_tray_in_oven import PutTrayInOven
-from rlbench.tasks.put_umbrella_in_umbrella_stand import \
-    PutUmbrellaInUmbrellaStand
+from rlbench.tasks.put_umbrella_in_umbrella_stand import PutUmbrellaInUmbrellaStand
 from rlbench.tasks.reach_and_drag import ReachAndDrag
 from rlbench.tasks.reach_target import ReachTarget
 from rlbench.tasks.remove_cups import RemoveCups
@@ -78,8 +75,7 @@ from rlbench.tasks.setup_checkers import SetupCheckers
 from rlbench.tasks.setup_chess import SetupChess
 from rlbench.tasks.slide_block_to_target import SlideBlockToTarget
 from rlbench.tasks.slide_cabinet_open import SlideCabinetOpen
-from rlbench.tasks.slide_cabinet_open_and_place_cups import \
-    SlideCabinetOpenAndPlaceCups
+from rlbench.tasks.slide_cabinet_open_and_place_cups import SlideCabinetOpenAndPlaceCups
 from rlbench.tasks.solve_puzzle import SolvePuzzle
 from rlbench.tasks.stack_blocks import StackBlocks
 from rlbench.tasks.stack_chairs import StackChairs
@@ -93,13 +89,13 @@ from rlbench.tasks.take_item_out_of_drawer import TakeItemOutOfDrawer
 from rlbench.tasks.take_lid_off_saucepan import TakeLidOffSaucepan
 from rlbench.tasks.take_money_out_safe import TakeMoneyOutSafe
 from rlbench.tasks.take_off_weighing_scales import TakeOffWeighingScales
-from rlbench.tasks.take_plate_off_colored_dish_rack import \
-    TakePlateOffColoredDishRack
+from rlbench.tasks.take_plate_off_colored_dish_rack import TakePlateOffColoredDishRack
 from rlbench.tasks.take_shoes_out_of_box import TakeShoesOutOfBox
 from rlbench.tasks.take_toilet_roll_off_stand import TakeToiletRollOffStand
 from rlbench.tasks.take_tray_out_of_oven import TakeTrayOutOfOven
-from rlbench.tasks.take_umbrella_out_of_umbrella_stand import \
-    TakeUmbrellaOutOfUmbrellaStand
+from rlbench.tasks.take_umbrella_out_of_umbrella_stand import (
+    TakeUmbrellaOutOfUmbrellaStand,
+)
 from rlbench.tasks.take_usb_out_of_computer import TakeUsbOutOfComputer
 from rlbench.tasks.toilet_seat_down import ToiletSeatDown
 from rlbench.tasks.toilet_seat_up import ToiletSeatUp
@@ -111,8 +107,9 @@ from rlbench.tasks.water_plants import WaterPlants
 from rlbench.tasks.weighing_scales import WeighingScales
 from rlbench.tasks.wipe_desk import WipeDesk
 
+
 FS10_V1 = {
-    'train': [
+    "train": [
         ReachTarget,
         CloseBox,
         CloseMicrowave,
@@ -122,19 +119,21 @@ FS10_V1 = {
         PutUmbrellaInUmbrellaStand,
         SlideCabinetOpen,
         CloseFridge,
-        PickAndLift
+        PickAndLift,
     ],
-    'test': [
+    "test": [
         OpenBox,
         OpenMicrowave,
         UnplugCharger,
         ToiletSeatUp,
         OpenFridge,
-    ]
+    ],
 }
 
 FS25_V1 = {
-    'train': FS10_V1['train'] + FS10_V1['test'] + [
+    "train": FS10_V1["train"]
+    + FS10_V1["test"]
+    + [
         TurnTap,
         LightBulbIn,
         BasketballInHoop,
@@ -144,19 +143,15 @@ FS25_V1 = {
         PutItemInDrawer,
         OpenDrawer,
         CloseDrawer,
-        TurnOvenOn
+        TurnOvenOn,
     ],
-    'test': [
-        LightBulbOut,
-        TvOn,
-        OpenOven,
-        OpenDoor,
-        TakeItemOutOfDrawer
-    ]
+    "test": [LightBulbOut, TvOn, OpenOven, OpenDoor, TakeItemOutOfDrawer],
 }
 
 FS50_V1 = {
-    'train': FS25_V1['train'] + FS25_V1['test'] + [
+    "train": FS25_V1["train"]
+    + FS25_V1["test"]
+    + [
         BeatTheBuzz,
         BlockPyramid,
         ChangeClock,
@@ -176,19 +171,21 @@ FS50_V1 = {
         ScoopWithSpatula,
         SetTheTable,
         SetupCheckers,
-        SlideBlockToTarget
+        SlideBlockToTarget,
     ],
-    'test': [
+    "test": [
         Hockey,
         InsertUsbInComputer,
         PressSwitch,
         PlayJenga,
         MeatOffGrill,
-    ]
+    ],
 }
 
 FS95_V1 = {
-    'train': FS50_V1['train'] + FS50_V1['test'] + [
+    "train": FS50_V1["train"]
+    + FS50_V1["test"]
+    + [
         HitBallWithQueue,
         ScrewNail,
         LampOff,
@@ -228,30 +225,39 @@ FS95_V1 = {
         SolvePuzzle,
         PickUpCup,
         PhoneOnBase,
-        PourFromCupToCup
+        PourFromCupToCup,
     ],
-    'test': [
+    "test": [
         PutKnifeOnChoppingBoard,
         PutBooksOnBookshelf,
         PushButtons,
         PutGroceriesInCupboard,
         TakeTrayOutOfOven,
-    ]
+    ],
 }
 
-MT15_V1 = {
-    'train': FS10_V1['train'] + FS10_V1['test']
-}
+MT15_V1 = {"train": FS10_V1["train"] + FS10_V1["test"]}
 
 
-MT30_V1 = {
-    'train': FS25_V1['train'] + FS25_V1['test']
-}
+MT30_V1 = {"train": FS25_V1["train"] + FS25_V1["test"]}
 
-MT55_V1 = {
-    'train': FS50_V1['train'] + FS50_V1['test']
-}
+MT55_V1 = {"train": FS50_V1["train"] + FS50_V1["test"]}
 
-MT100_V1 = {
-    'train': FS95_V1['train'] + FS95_V1['test']
+MT100_V1 = {"train": FS95_V1["train"] + FS95_V1["test"]}
+
+CUSTOM_TASKS = {
+    "train": FS10_V1["train"]
+    + FS10_V1["test"]
+    + [
+        TurnTap,
+        BasketballInHoop,
+        OpenWindow,
+        CloseDoor,
+        PushButton,
+        PutItemInDrawer,
+        OpenDrawer,
+        CloseDrawer,
+        TurnOvenOn,
+    ],
+    "test": [TvOn, OpenOven, OpenDoor, TakeItemOutOfDrawer],
 }
