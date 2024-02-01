@@ -1,5 +1,6 @@
 from pyrep.const import RenderMode
 from rlbench.noise_model import NoiseModel, Identity
+from typing import Dict
 
 
 class CameraConfig(object):
@@ -34,11 +35,12 @@ class CameraConfig(object):
 
 class ObservationConfig(object):
     def __init__(self,
-                 left_shoulder_camera: CameraConfig = None,
-                 right_shoulder_camera: CameraConfig = None,
-                 overhead_camera: CameraConfig = None,
-                 wrist_camera: CameraConfig = None,
-                 front_camera: CameraConfig = None,
+                #  left_shoulder_camera: CameraConfig = None,
+                #  right_shoulder_camera: CameraConfig = None,
+                #  overhead_camera: CameraConfig = None,
+                #  wrist_camera: CameraConfig = None,
+                #  front_camera: CameraConfig = None,
+                 cam_configs: Dict[str, CameraConfig] = None,
                  joint_velocities=True,
                  joint_velocities_noise: NoiseModel=Identity(),
                  joint_positions=True,
@@ -54,21 +56,22 @@ class ObservationConfig(object):
                  record_gripper_closing=False,
                  task_low_dim_state=False,
                  ):
-        self.left_shoulder_camera = (
-            CameraConfig() if left_shoulder_camera is None
-            else left_shoulder_camera)
-        self.right_shoulder_camera = (
-            CameraConfig() if right_shoulder_camera is None
-            else right_shoulder_camera)
-        self.overhead_camera = (
-            CameraConfig() if overhead_camera is None
-            else overhead_camera)
-        self.wrist_camera = (
-            CameraConfig() if wrist_camera is None
-            else wrist_camera)
-        self.front_camera = (
-            CameraConfig() if front_camera is None
-            else front_camera)
+        # self.left_shoulder_camera = (
+        #     CameraConfig() if left_shoulder_camera is None
+        #     else left_shoulder_camera)
+        # self.right_shoulder_camera = (
+        #     CameraConfig() if right_shoulder_camera is None
+        #     else right_shoulder_camera)
+        # self.overhead_camera = (
+        #     CameraConfig() if overhead_camera is None
+        #     else overhead_camera)
+        # self.wrist_camera = (
+        #     CameraConfig() if wrist_camera is None
+        #     else wrist_camera)
+        # self.front_camera = (
+        #     CameraConfig() if front_camera is None
+        #     else front_camera)
+        self.cameras = cam_configs
         self.joint_velocities = joint_velocities
         self.joint_velocities_noise = joint_velocities_noise
         self.joint_positions = joint_positions
@@ -89,11 +92,14 @@ class ObservationConfig(object):
         self.set_all_low_dim(value)
 
     def set_all_high_dim(self, value: bool):
-        self.left_shoulder_camera.set_all(value)
-        self.right_shoulder_camera.set_all(value)
-        self.overhead_camera.set_all(value)
-        self.wrist_camera.set_all(value)
-        self.front_camera.set_all(value)
+        # self.left_shoulder_camera.set_all(value)
+        # self.right_shoulder_camera.set_all(value)
+        # self.overhead_camera.set_all(value)
+        # self.wrist_camera.set_all(value)
+        # self.front_camera.set_all(value)
+        for cam in self.cameras.values():
+            cam.set_all(value)
+
 
     def set_all_low_dim(self, value: bool):
         self.joint_velocities = value

@@ -5,3 +5,4 @@ html-testRunner
 setuptools
 natsort
 tqdm
+absl-py
