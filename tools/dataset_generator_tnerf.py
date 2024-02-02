@@ -43,7 +43,7 @@ flags.DEFINE_enum(
     "The renderer to use. opengl does not include shadows, " "but is faster.",
 )
 flags.DEFINE_integer(
-    "processes", 2, "The number of parallel processes during collection."
+    "processes", 1, "The number of parallel processes during collection."
 )
 flags.DEFINE_integer(
     "episodes_per_task", 2, "The number of episodes to collect per task."
@@ -52,7 +52,7 @@ flags.DEFINE_integer(
     "variations", 2, "Number of variations to collect per task. -1 for all."
 )
 flags.DEFINE_integer(
-    "num_additional_cameras", 5, "Number of additional cameras to add."
+    "num_additional_cameras", 5, "Number of additional cameras to add (between 0 and 90)."
 )
 
 
@@ -167,14 +167,6 @@ def run(i, lock, task_index, variation_count, results, file_lock, tasks):
         headless=True,
     )
     rlbench_env.launch()
-
-    # Add additional cameras
-    for cam_idx in range(FLAGS.num_additional_cameras):
-        # Add the camera to the scene
-        cam_placeholder = Dummy('cam_additional_%d' % cam_idx)
-        cam = VisionSensor.create(FLAGS.camera_resolution)
-        cam.set_pose(cam_placeholder.get_pose())
-        cam.set_parent(cam_placeholder)
 
     task_env = None
 

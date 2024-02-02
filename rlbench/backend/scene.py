@@ -19,6 +19,9 @@ from rlbench.demo import Demo
 from rlbench.noise_model import NoiseModel
 from rlbench.observation_config import ObservationConfig, CameraConfig
 
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+
 STEPS_BEFORE_EPISODE_START = 10
 
 
@@ -71,13 +74,91 @@ class Scene(object):
     def _setup_cameras(self) -> None:
         """Sets up the cameras for the scene."""
 
-        self._cams = {
-            key: VisionSensor(key) for key in self._obs_config.cameras.keys()
-        }
+        def look_at(robot_pos, camera_pos):
+            # Compute the forward vector (from the camera to the robot)
+            forward = robot_pos - camera_pos
+            forward /= np.linalg.norm(forward)  # Normalize
 
-        self._cam_masks = {
-            key: VisionSensor(f"{key}_mask") for key in self._obs_config.cameras.keys()
-        }
+            # Define the world's up vector
+            world_up = np.array([0, 0, 1])
+            
+            # Check if the forward vector is close to the world's up or down direction
+            if np.abs(np.dot(forward, world_up)) > 0.95:
+                # Choose a different reference for the up vector if the forward vector is nearly aligned with the world_up
+                # For example, use the negative or positive x-axis as the up direction (depending on the specific case)
+                alt_up = np.array([1, 0, 0]) if forward[1] > 0 else np.array([-1, 0, 0])
+                right = np.cross(alt_up, forward)
+            else:
+                # Compute the right vector
+                right = np.cross(world_up, forward)
+
+            right /= np.linalg.norm(right)  # Normalize
+
+            # Compute the adjusted up vector (perpendicular to forward and right)
+            up = np.cross(forward, right)
+            up /= np.linalg.norm(up)  # Normalize
+
+            # Construct the rotation matrix
+            rot_matrix = np.array([
+                right,     # First column
+                up,        # Second column
+                forward    # Third column
+            ]).T
+
+            # Convert to quaternion
+            rot_quaternion = R.from_matrix(rot_matrix).as_quat()  # Returns (x, y, z, w)
+            return rot_quaternion
+
+        def sample_random_pose():
+            """Samples a random pose of a camera on the upper hemisphere."""
+
+            radius_limits = [1.0, 2.0]
+            radius = np.random.uniform(*radius_limits)
+            z_translation = 0.8
+
+            # Sample phi uniformly from [0, 2*pi]
+            phi = np.random.uniform(0, 2 * np.pi)
+            # Sample cos(theta) uniformly, then compute theta.
+            cos_theta = np.random.uniform(0, 1)
+            theta = np.arccos(cos_theta)
+
+            # Spherical to Cartesian conversion.
+            x = radius * np.sin(theta) * np.cos(phi)
+            y = radius * np.sin(theta) * np.sin(phi)
+            z = radius * np.cos(theta) + z_translation
+
+            camera_position = np.array([x, y, z])
+
+            # Look at the origin
+            look_at_origin = look_at(robot_pos, camera_position)
+
+            return np.r_[camera_position, look_at_origin]
+            
+
+        self._cams = {}
+        self._cam_masks = {}
+
+        # Get the robot's position and translate the focus forward by 0.3m
+        robot_pos = self.robot.arm.get_position() + np.array([0.3, 0, 0])
+
+        for cam_name in self._obs_config.cameras.keys():
+            if "cam_additional_" in cam_name:
+                # Add the camera to the scene
+                cam_placeholder = Dummy(cam_name)
+                cam_rgb = VisionSensor.create(self._obs_config.cameras[cam_name].image_size)
+                cam_mask = VisionSensor.create(self._obs_config.cameras[cam_name].image_size)
+                cam_mask.set_parent(cam_rgb)
+                cam_rgb.set_pose(sample_random_pose())
+                cam_rgb.set_parent(cam_placeholder)
+                self._cams[cam_name] = cam_rgb
+                self._cam_masks[f"{cam_name}"] = cam_mask
+            else:
+                self._cams[cam_name] = VisionSensor(cam_name)
+                self._cam_masks[f"{cam_name}"] = VisionSensor(f"{cam_name}_mask")
+
+        # self._cam_masks = {
+        #     key: VisionSensor(f"{key}_mask") for key in self._obs_config.cameras.keys()
+        # }
 
     def load(self, task: Task) -> None:
         """Loads the task and positions at the centre of the workspace.

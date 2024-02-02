@@ -6,3 +6,4 @@ setuptools
 natsort
 tqdm
 absl-py
+scipy
