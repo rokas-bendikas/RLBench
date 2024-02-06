@@ -43,16 +43,16 @@ flags.DEFINE_enum(
     "The renderer to use. opengl does not include shadows, " "but is faster.",
 )
 flags.DEFINE_integer(
-    "processes", 1, "The number of parallel processes during collection."
+    "processes", 4, "The number of parallel processes during collection."
 )
 flags.DEFINE_integer(
-    "episodes_per_task", 2, "The number of episodes to collect per task."
+    "episodes_per_task", 30, "The number of episodes to collect per task."
 )
 flags.DEFINE_integer(
-    "variations", 2, "Number of variations to collect per task. -1 for all."
+    "variations", -1, "Number of variations to collect per task. -1 for all."
 )
 flags.DEFINE_integer(
-    "num_additional_cameras", 5, "Number of additional cameras to add (between 0 and 90)."
+    "num_additional_cameras", 90, "Number of additional cameras to add (between 0 and 90)."
 )
 
 
