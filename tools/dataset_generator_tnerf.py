@@ -22,11 +22,12 @@ from copy import deepcopy
 
 from absl import app
 from absl import flags
+import numpy as np
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    "save_path", "/home/rokas/data/rlbench_data_v3", "Where to save the demos."
+    "save_path", "/home/rokas/data/rlbench_data_v5", "Where to save the demos."
 )
 flags.DEFINE_list(
     "tasks",
@@ -43,16 +44,16 @@ flags.DEFINE_enum(
     "The renderer to use. opengl does not include shadows, " "but is faster.",
 )
 flags.DEFINE_integer(
-    "processes", 4, "The number of parallel processes during collection."
+    "processes", 6, "The number of parallel processes during collection."
 )
 flags.DEFINE_integer(
-    "episodes_per_task", 20, "The number of episodes to collect per task."
+    "episodes_per_task", 30, "The number of episodes to collect per task."
 )
 flags.DEFINE_integer(
     "variations", -1, "Number of variations to collect per task. -1 for all."
 )
 flags.DEFINE_integer(
-    "num_additional_cameras", 20, "Number of additional cameras to add (between 0 and 90)."
+    "num_additional_cameras", 30, "Number of additional cameras to add (between 0 and 90)."
 )
 
 
@@ -92,12 +93,17 @@ def save_demo(demo, example_path):
                 rgbs[cam_name].save(os.path.join(rgb_path, IMAGE_FORMAT % i))
 
         if save_depths:
+            # depths = {
+            #     key: utils.float_array_to_rgb_image(depth, scale_factor=DEPTH_SCALE)
+            #     for key, depth in obs.obs_depth.items()
+            # }
             depths = {
-                key: utils.float_array_to_rgb_image(depth, scale_factor=DEPTH_SCALE)
+                key: depth
                 for key, depth in obs.obs_depth.items()
             }
             for cam_name, depth_path in depth_paths.items():
-                depths[cam_name].save(os.path.join(depth_path, IMAGE_FORMAT % i))
+                np.save(os.path.join(depth_path, DEPTH_FORMAT % i), depths[cam_name])
+                # depths[cam_name].save(os.path.join(depth_path, IMAGE_FORMAT % i))
         if save_masks:
             masks = {
                 key: Image.fromarray((mask * 255).astype(np.uint8))
@@ -130,12 +136,12 @@ def run(i, lock, task_index, variation_count, results, file_lock, tasks):
 
     cam_config = CameraConfig(
         rgb=True,
-        depth=False,
+        depth=True,
         point_cloud=False,
         mask=False,
         image_size=img_size,
         masks_as_one_channel=True,
-        depth_in_meters=False,
+        depth_in_meters=True,
     )
 
     cam_names = [

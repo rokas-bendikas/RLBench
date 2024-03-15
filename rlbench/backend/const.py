@@ -1,4 +1,5 @@
 IMAGE_FORMAT = '%d.png'
+DEPTH_FORMAT = '%d.npy'
 
 LEFT_SHOULDER_RGB_FOLDER = 'left_shoulder_rgb'
 LEFT_SHOULDER_DEPTH_FOLDER = 'left_shoulder_depth'
