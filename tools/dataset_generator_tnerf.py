@@ -56,6 +56,9 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     "num_additional_cameras", 30, "Number of additional cameras to add (between 0 and 90)."
 )
+flags.DEFINE_bool(
+    "shaped_rewards", False, "Whether to use shaped rewards or not."
+)
 
 
 def check_and_make(dir):
@@ -175,6 +178,7 @@ def run(i, lock, task_index, variation_count, results, file_lock, tasks):
         action_mode=MoveArmThenGripper(JointVelocity(), Discrete()),
         obs_config=obs_config,
         headless=True,
+        shaped_rewards=FLAGS.shaped_rewards
     )
     rlbench_env.launch()
 
