@@ -35,7 +35,7 @@ env = Environment(
     action_mode, DATASET, obs_config, 
     headless=False,
     shaped_rewards=True, 
-    remove_background = True
+    remove_background = True,
 )
 
 env.launch()

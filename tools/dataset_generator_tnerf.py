@@ -59,6 +59,9 @@ flags.DEFINE_integer(
 flags.DEFINE_bool(
     "shaped_rewards", False, "Whether to use shaped rewards or not."
 )
+flags.DEFINE_bool(
+    "remove_background", True, "Whether to remove the background or not."
+)
 
 
 def check_and_make(dir):
@@ -178,7 +181,8 @@ def run(i, lock, task_index, variation_count, results, file_lock, tasks):
         action_mode=MoveArmThenGripper(JointVelocity(), Discrete()),
         obs_config=obs_config,
         headless=True,
-        shaped_rewards=FLAGS.shaped_rewards
+        shaped_rewards=FLAGS.shaped_rewards,
+        remove_background = FLAGS.remove_background,
     )
     rlbench_env.launch()
 
