@@ -11,6 +11,7 @@ from pyrep.errors import ConfigurationPathError
 from pyrep.objects import Dummy
 from pyrep.objects.shape import Shape
 from pyrep.objects.vision_sensor import VisionSensor
+from pyrep.objects.object import Object
 
 from rlbench.backend.exceptions import (
     WaypointError,
@@ -33,15 +34,15 @@ from rlbench.sim2real.domain_randomization import (
 
 STEPS_BEFORE_EPISODE_START = 10
 
-SCENE_OBJECTS = [
-    "Floor",
+BACKGROUND_OBJECTS = [
     "Roof",
     "Wall1",
     "Wall2",
     "Wall3",
     "Wall4",
-    "diningTable_visible",
 ]
+FLOOR_OBJECTS = ["Floor"]
+SCENE_OBJECTS =  BACKGROUND_OBJECTS + FLOOR_OBJECTS + ["diningTable_visible"] 
 
 TEX_KWARGS = {
     "mapping_mode": TextureMappingMode.PLANE,
@@ -67,6 +68,7 @@ class Scene(object):
         default_texture: str = "default",
         input_texture: str = "random",
         randomize_every: RandomizeEvery = None,
+        remove_background : bool = False
     ):
         self.pyrep = pyrep
         self.robot = robot
@@ -136,7 +138,13 @@ class Scene(object):
 
         self.default_texture = default_texture
         self.input_texture = input_texture
-        self._scene_objects = [Shape(name) for name in SCENE_OBJECTS]
+
+        self._remove_background = remove_background
+        if self._remove_background:
+            self.remove_background()
+
+        self._static_scene_objects_names = SCENE_OBJECTS
+        self._scene_objects = [Shape(name) for name in self._static_scene_objects_names]
         self._default_colorset = [obj.get_color() for obj in self._scene_objects]
 
         self._scene_objects += self.robot.arm.get_visuals()
@@ -147,6 +155,31 @@ class Scene(object):
 
         self.cur_texture = None
         self.randomize_every = randomize_every
+
+    def remove_background(self):
+        global SCENE_OBJECTS
+        SCENE_OBJECTS = [s for s in SCENE_OBJECTS \
+                        if s not in BACKGROUND_OBJECTS \
+                        #   and s not in FLOOR_OBJECTS
+                        ]
+        objects = self.pyrep.get_objects_in_tree() 
+        for obj in objects:
+            if obj.get_object_name(obj._handle) in BACKGROUND_OBJECTS:
+                print(f"Removing object {obj.get_object_name(obj._handle)} from background")
+                obj.remove()
+            
+            if "Floor" in obj.get_object_name(obj._handle):
+            # if obj.get_object_name(obj._handle) in FLOOR_OBJECTS:
+                print(f"Making object {obj.get_object_name(obj._handle)} transparent")
+                try:
+                    obj.set_renderable(False)
+                    obj.set_transparency(True)
+                    obj.set_color([1.0, 1.0, 1.0, 0.0])
+                    obj.scale_object(0.5, 0.5, 0.5)
+                except Exception as e: 
+                    print (e)
+                    pass
+                # obj.remove()
 
     def _process_randomization_range(self, intervals):
         intervals_list = []
@@ -606,14 +639,14 @@ class Scene(object):
     def _change_texture(self, texture):
         assert texture in ["default", "real_proxy", "canonical", "random"]
         if texture == "default":
-            background_obj_list = [Shape(name) for name in SCENE_OBJECTS]
+            background_obj_list = [Shape(name) for name in self._static_scene_objects_names]
             obj_list = background_obj_list
             for default_color, obj in zip(self._default_colorset, obj_list):
                 obj.set_color(default_color)
                 # text_ob.remove()
 
         elif texture == "real_proxy":
-            background_obj_list = [Shape(name) for name in SCENE_OBJECTS]
+            background_obj_list = [Shape(name) for name in self._static_scene_objects_names]
             obj_list = background_obj_list
             colorset = [[1.0, 1.0, 1.0]] * len(obj_list)
             for default_color, obj in zip(colorset, obj_list):
@@ -660,7 +693,7 @@ class Scene(object):
                     self.pyrep.group_objects(ungrouped)
 
         elif texture == "random":
-            # background_obj_list = [Shape(name) for name in SCENE_OBJECTS]
+            # background_obj_list = [Shape(name) for name in self._static_scene_objects_names]
             # obj_list = background_obj_list
 
             background_obj_list = [
@@ -709,6 +742,24 @@ class Scene(object):
                     obj.remove_texture()
                 except RuntimeError:
                     pass
+
+        if self._remove_background:
+            for obj in self.pyrep.get_objects_in_tree():
+                if "Floor" in obj.get_object_name(obj._handle):
+                # if obj.get_object_name(obj._handle) in FLOOR_OBJECTS:
+                    print(f"Making object {obj.get_object_name(obj._handle)} transparent")
+                    try:
+                        obj.set_renderable(False)
+                        obj.set_transparency(1.)
+                        obj.set_color([1.0, 1.0, 1.0, 0.0])
+                    except: 
+                        pass
+                    try:
+                        shape = Shape(obj.get_object_name(obj._handle))
+                        shape.remove_texture()
+                        shape.set_transparency(1.)
+                    except: 
+                        pass
 
     def step(self):
         if True in self._moving_camera.values():
@@ -1006,6 +1057,7 @@ class AdditionalViewScene(Scene):
         default_texture: str = "default",
         input_texture: str = "random",
         randomize_every: RandomizeEvery = None,
+        remove_background : bool = False
     ):
         self.pyrep = pyrep
         self.robot = robot
@@ -1076,7 +1128,12 @@ class AdditionalViewScene(Scene):
 
         self.default_texture = default_texture
         self.input_texture = input_texture
-        self._scene_objects = [Shape(name) for name in SCENE_OBJECTS]
+
+        self._remove_background = remove_background
+        if self._remove_background:
+            self.remove_background()
+        self._static_scene_objects_names = SCENE_OBJECTS
+        self._scene_objects = [Shape(name) for name in self._static_scene_objects_names]
         self._default_colorset = [obj.get_color() for obj in self._scene_objects]
 
         self._scene_objects += self.robot.arm.get_visuals()

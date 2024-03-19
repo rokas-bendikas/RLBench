@@ -32,12 +32,16 @@ obs_config.set_all(True)
 action_mode = MoveArmThenGripper(
     arm_action_mode=JointVelocity(), gripper_action_mode=Discrete())
 env = Environment(
-    action_mode, DATASET, obs_config, False,
-    shaped_rewards=True
+    action_mode, DATASET, obs_config, 
+    headless=False,
+    shaped_rewards=True, 
+    remove_background = True
 )
+
 env.launch()
 
 task = env.get_task(StackWine)
+
 demos = task.get_demos(0, live_demos=live_demos)
 
 agent = Agent(env.action_shape)
@@ -55,5 +59,7 @@ for i in range(training_steps):
     print(action)
     obs, reward, terminate = task.step(action)
     print (reward)
+# for i in range(1000):
+#     obs, reward, terminate = task.step(action)
 print('Done')
 env.shutdown()

@@ -48,6 +48,7 @@ class Environment(object):
         paired_randomize: bool = False,
         default_texture: str = "default",
         input_texture: str = "random",
+        remove_background: bool = False,
     ):
         self._is_standard_observation = (not isinstance(obs_config, AdditionalViewObservationConfig))
         self._dataset_root = dataset_root
@@ -89,6 +90,7 @@ class Environment(object):
         self._prev_task = None
         self._add_cam_names = add_cam_names
         self._verbose = verbose
+        self._remove_background = remove_background
 
     def _check_dataset_structure(self):
         if len(self._dataset_root) > 0 and not exists(self._dataset_root):
@@ -140,6 +142,7 @@ class Environment(object):
                 self._robot_setup,
                 self._add_cam_names,
                 self._verbose,
+                remove_background = self._remove_background,
             )
         else:
             self._scene = scene_cls(
@@ -152,6 +155,7 @@ class Environment(object):
                 default_texture=self._default_texture,
                 input_texture=self._input_texture,
                 randomize_every=self._randomize_every,
+                remove_background = self._remove_background,
             )
 
         self._action_mode.arm_action_mode.set_control_mode(self._robot)
