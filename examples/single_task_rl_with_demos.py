@@ -5,7 +5,7 @@ from rlbench.action_modes.arm_action_modes import JointVelocity
 from rlbench.action_modes.gripper_action_modes import Discrete
 from rlbench.environment import Environment
 from rlbench.observation_config import ObservationConfig
-from rlbench.tasks import ReachTarget
+from rlbench.tasks import StackWine
 
 
 class Agent(object):
@@ -32,11 +32,13 @@ obs_config.set_all(True)
 action_mode = MoveArmThenGripper(
     arm_action_mode=JointVelocity(), gripper_action_mode=Discrete())
 env = Environment(
-    action_mode, DATASET, obs_config, False)
+    action_mode, DATASET, obs_config, False,
+    shaped_rewards=True
+)
 env.launch()
 
-task = env.get_task(ReachTarget)
-demos = task.get_demos(2, live_demos=live_demos)
+task = env.get_task(StackWine)
+demos = task.get_demos(0, live_demos=live_demos)
 
 agent = Agent(env.action_shape)
 agent.ingest(demos)
@@ -52,6 +54,6 @@ for i in range(training_steps):
     action = agent.act(obs)
     print(action)
     obs, reward, terminate = task.step(action)
-
+    print (reward)
 print('Done')
 env.shutdown()

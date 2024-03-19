@@ -3,15 +3,17 @@ from abc import abstractmethod
 import numpy as np
 
 from rlbench.action_modes.arm_action_modes import ArmActionMode, JointPosition
-from rlbench.action_modes.gripper_action_modes import GripperActionMode, GripperJointPosition
+from rlbench.action_modes.gripper_action_modes import (
+    GripperActionMode,
+    GripperJointPosition,
+)
 from rlbench.backend.scene import Scene
 
 
 class ActionMode(object):
-
-    def __init__(self,
-                 arm_action_mode: 'ArmActionMode',
-                 gripper_action_mode: 'GripperActionMode'):
+    def __init__(
+        self, arm_action_mode: "ArmActionMode", gripper_action_mode: "GripperActionMode"
+    ):
         self.arm_action_mode = arm_action_mode
         self.gripper_action_mode = gripper_action_mode
 
@@ -25,7 +27,7 @@ class ActionMode(object):
 
     def action_bounds(self):
         """Returns the min and max of the action mode."""
-        raise NotImplementedError('You must define your own action bounds.')
+        raise NotImplementedError("You must define your own action bounds.")
 
 
 class MoveArmThenGripper(ActionMode):
@@ -43,12 +45,14 @@ class MoveArmThenGripper(ActionMode):
 
     def action_shape(self, scene: Scene):
         return np.prod(self.arm_action_mode.action_shape(scene)) + np.prod(
-            self.gripper_action_mode.action_shape(scene))
+            self.gripper_action_mode.action_shape(scene)
+        )
 
 
 # RLBench is highly customizable, in both observations and action modes.
 # This can be a little daunting, so below we have defined some
 # common action modes for you to choose from.
+
 
 class JointPositionActionMode(ActionMode):
     """A pre-set, delta joint position action mode or arm and abs for gripper.
@@ -58,7 +62,8 @@ class JointPositionActionMode(ActionMode):
 
     def __init__(self):
         super(JointPositionActionMode, self).__init__(
-            JointPosition(False), GripperJointPosition(True))
+            JointPosition(False), GripperJointPosition(True)
+        )
 
     def action(self, scene: Scene, action: np.ndarray):
         arm_act_size = np.prod(self.arm_action_mode.action_shape(scene))
@@ -72,7 +77,8 @@ class JointPositionActionMode(ActionMode):
 
     def action_shape(self, scene: Scene):
         return np.prod(self.arm_action_mode.action_shape(scene)) + np.prod(
-            self.gripper_action_mode.action_shape(scene))
+            self.gripper_action_mode.action_shape(scene)
+        )
 
     def action_bounds(self):
         """Returns the min and max of the action mode."""

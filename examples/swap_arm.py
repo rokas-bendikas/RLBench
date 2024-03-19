@@ -24,10 +24,11 @@ obs_config.set_all(True)
 obs_config.gripper_touch_forces = False
 
 action_mode = MoveArmThenGripper(
-    arm_action_mode=JointVelocity(), gripper_action_mode=Discrete())
+    arm_action_mode=JointVelocity(), gripper_action_mode=Discrete()
+)
 env = Environment(
-    action_mode, obs_config=obs_config, headless=False,
-    robot_setup='sawyer')
+    action_mode, obs_config=obs_config, headless=False, robot_setup="sawyer"
+)
 env.launch()
 
 task = env.get_task(ReachTarget)
@@ -39,12 +40,12 @@ episode_length = 40
 obs = None
 for i in range(training_steps):
     if i % episode_length == 0:
-        print('Reset Episode')
+        print("Reset Episode")
         descriptions, obs = task.reset()
         print(descriptions)
     action = agent.act(obs)
     print(action)
     obs, reward, terminate = task.step(action)
 
-print('Done')
+print("Done")
 env.shutdown()

@@ -15,7 +15,7 @@ class CustomAbsoluteJointVelocity(JointVelocity):
         if np.random.random() > 0.5:
             # Example of custom behaviour.
             # Here we randomly ignore 50% of actions
-            print('Skip action!')
+            print("Skip action!")
             return
         super(CustomAbsoluteJointVelocity, self).action(scene, action)
 
@@ -50,12 +50,12 @@ episode_length = 40
 obs = None
 for i in range(training_steps):
     if i % episode_length == 0:
-        print('Reset Episode')
+        print("Reset Episode")
         descriptions, obs = task.reset()
         print(descriptions)
     action = agent.act(obs)
     print(action)
     obs, reward, terminate = task.step(action)
 
-print('Done')
+print("Done")
 env.shutdown()

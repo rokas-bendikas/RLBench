@@ -8,28 +8,36 @@ from rlbench.observation_config import ObservationConfig
 from rlbench.backend.robot import Robot
 from rlbench.sim2real.domain_randomization import RandomizeEvery
 
-SCENE_OBJECTS = ['Floor', 'Roof', 'Wall1', 'Wall2', 'Wall3', 'Wall4',
-                 'diningTable_visible']
+SCENE_OBJECTS = [
+    "Floor",
+    "Roof",
+    "Wall1",
+    "Wall2",
+    "Wall3",
+    "Wall4",
+    "diningTable_visible",
+]
 
 TEX_KWARGS = {
-    'mapping_mode': TextureMappingMode.PLANE,
-    'repeat_along_u': True,
-    'repeat_along_v': True,
-    'uv_scaling': [4., 4.]
+    "mapping_mode": TextureMappingMode.PLANE,
+    "repeat_along_u": True,
+    "repeat_along_v": True,
+    "uv_scaling": [4.0, 4.0],
 }
 
 
 class DomainRandomizationScene(Scene):
-
-    def __init__(self,
-                 pyrep: PyRep,
-                 robot: Robot,
-                 obs_config: ObservationConfig = ObservationConfig(),
-                 robot_setup: str = 'Panda',
-                 randomize_every: RandomizeEvery=RandomizeEvery.EPISODE,
-                 frequency: int=1,
-                 visual_randomization_config=None,
-                 dynamics_randomization_config=None):
+    def __init__(
+        self,
+        pyrep: PyRep,
+        robot: Robot,
+        obs_config: ObservationConfig = ObservationConfig(),
+        robot_setup: str = "Panda",
+        randomize_every: RandomizeEvery = RandomizeEvery.EPISODE,
+        frequency: int = 1,
+        visual_randomization_config=None,
+        dynamics_randomization_config=None,
+    ):
         super().__init__(pyrep, robot, obs_config, robot_setup)
         self._randomize_every = randomize_every
         self._frequency = frequency
@@ -40,8 +48,9 @@ class DomainRandomizationScene(Scene):
 
         if self._dynamics_rand_config is not None:
             raise NotImplementedError(
-                'Dynamics randomization coming soon! '
-                'Only visual randomization available.')
+                "Dynamics randomization coming soon! "
+                "Only visual randomization available."
+            )
 
         self._scene_objects = [Shape(name) for name in SCENE_OBJECTS]
         self._scene_objects += self.robot.arm.get_visuals()
@@ -62,8 +71,7 @@ class DomainRandomizationScene(Scene):
         return rand
 
     def _randomize(self):
-        tree = self.task.get_base().get_objects_in_tree(
-            ObjectType.SHAPE)
+        tree = self.task.get_base().get_objects_in_tree(ObjectType.SHAPE)
         tree = [Shape(obj.get_handle()) for obj in tree + self._scene_objects]
         if self._visual_rand_config is not None:
             files = self._visual_rand_config.sample(len(tree))
@@ -84,15 +92,17 @@ class DomainRandomizationScene(Scene):
 
     def init_episode(self, index: int, *args, **kwargs) -> List[str]:
         ret = super().init_episode(index, *args, **kwargs)
-        if (self._randomize_every != RandomizeEvery.TRANSITION and
-                self._should_randomize_episode(index)):
+        if (
+            self._randomize_every != RandomizeEvery.TRANSITION
+            and self._should_randomize_episode(index)
+        ):
             self._randomize()
             self.pyrep.step()  # Need to step to apply textures
         return ret
 
     def step(self):
         if self._randomize_every == RandomizeEvery.TRANSITION:
-            if self._count % self._frequency == 0 or self._count == 0 :
+            if self._count % self._frequency == 0 or self._count == 0:
                 self._randomize()
             self._count += 1
         super().step()

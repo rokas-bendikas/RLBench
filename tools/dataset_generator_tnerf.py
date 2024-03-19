@@ -4,7 +4,7 @@ from pyrep.const import RenderMode
 from pyrep.objects.dummy import Dummy
 from pyrep.objects.vision_sensor import VisionSensor
 
-from rlbench import ObservationConfig, CameraConfig
+from rlbench import ObservationConfig, AdditionalViewObservationConfig, CameraConfig
 from rlbench.action_modes.action_mode import MoveArmThenGripper
 from rlbench.action_modes.arm_action_modes import JointVelocity
 from rlbench.action_modes.gripper_action_modes import Discrete
@@ -12,7 +12,7 @@ from rlbench.backend.utils import task_file_to_task_class
 from rlbench.environment import Environment
 import rlbench.backend.task as task
 
-import os
+import os, sys
 import pickle
 from PIL import Image
 from rlbench.backend import utils
@@ -22,21 +22,22 @@ from copy import deepcopy
 
 from absl import app
 from absl import flags
-import numpy as np
+import traceback
+
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    "save_path", "/home/rokas/data/rlbench_data_v5", "Where to save the demos."
+    "save_path", "/tmp/rlbench_data/", "Where to save the demos."
 )
 flags.DEFINE_list(
     "tasks",
     [
-        "pick_and_lift",
+        "stack_wine",
     ],
     "The tasks to collect. If empty, all tasks are collected.",
 )
-flags.DEFINE_list("image_size", [112, 112], "The size of the images tp save.")
+flags.DEFINE_list("image_size", [96, 96], "The size of the images tp save.")
 flags.DEFINE_enum(
     "renderer",
     "opengl3",
@@ -155,9 +156,12 @@ def run(i, lock, task_index, variation_count, results, file_lock, tasks):
     # Make a dictionary with all the camera configurations
     cam_configs = {cam_name: deepcopy(cam_config) for cam_name in cam_names}
 
-    obs_config = ObservationConfig(
-        cam_configs=cam_configs,
-    )
+    if FLAGS.num_additional_cameras > 0:
+        obs_config = AdditionalViewObservationConfig(
+            cam_configs=cam_configs,
+        )
+    else: 
+        obs_config = ObservationConfig()
 
     if FLAGS.renderer == "opengl":
         for cam in obs_config.cameras.values():
@@ -233,12 +237,21 @@ def run(i, lock, task_index, variation_count, results, file_lock, tasks):
                 "// Demo:",
                 ex_idx,
             )
-            attempts = 3
+            
+            # Internally, they are trying to collect the demo 10 times, 
+            # so there is no need to try more than once.
+            attempts = 1 
             while attempts > 0:
                 try:
+                    print(f"Process {i} // {attempts} attempt(s) left to collect demo. Attempting...")
                     # TODO: for now we do the explicit looping.
-                    (demo,) = task_env.get_demos(amount=1, live_demos=True)
+                    demos, _demos_randomize = task_env.get_demos(amount=1, live_demos=True)
+                    demo = demos[0]
                 except Exception as e:
+                    # Print exception and stack trace
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    traceback.print_exception(exc_type, exc_value, exc_traceback)
+                    
                     attempts -= 1
                     if attempts > 0:
                         continue
@@ -272,7 +285,7 @@ def main(argv):
     if len(FLAGS.tasks) > 0:
         for t in FLAGS.tasks:
             if t not in task_files:
-                raise ValueError("Task %s not recognised!." % t)
+                raise ValueError(f"Task {t} not recognised!. Not in {task_files}")
         task_files = FLAGS.tasks
 
     tasks = [task_file_to_task_class(t) for t in task_files]

@@ -1,5 +1,5 @@
-import gym
 import rlbench.gym
+import gym
 
 env = gym.make('reach_target-state-v0', render_mode='human')
 
