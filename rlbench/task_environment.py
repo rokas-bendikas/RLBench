@@ -124,6 +124,7 @@ class TaskEnvironment(object):
         random_selection: bool = True,
         from_episode_number: int = 0,
         randomize: bool = False,
+        expose_rewards: bool = False,
     ) -> List[Demo]:
         """Negative means all demos"""
 
@@ -157,9 +158,19 @@ class TaskEnvironment(object):
                 callable_each_step,
                 max_attempts,
                 randomize=randomize,
+                expose_rewards = expose_rewards,
             )
             self._robot.arm.set_control_loop_enabled(ctr_loop)
         return demos, demos_randomize
+
+    def _expose_rewards_fn(self, obs: Observation) -> None:
+        success, terminate = self._task.success()
+        reward = float(success)
+        if self._shaped_rewards:
+            reward = self._task.reward()
+        obs.reward = reward
+        obs.terminate = terminate
+        return obs
 
     def _get_live_demos(
         self,
@@ -167,7 +178,17 @@ class TaskEnvironment(object):
         callable_each_step: Callable[[Observation], None] = None,
         max_attempts: int = _MAX_DEMO_ATTEMPTS,
         randomize: bool = False,
+        expose_rewards : bool = False,
     ) -> List[Demo]:
+        if expose_rewards:
+            print("Setting expose_rewards is True")
+            if callable_each_step is not None:
+                raise RuntimeError(
+                    "Can't expose rewards and provide a callable_each_step."
+                    "Set callable_each_step to None."
+                )
+            callable_each_step = self._expose_rewards_fn
+
         demos = []
         demos_randomize = []
         for i in range(amount):

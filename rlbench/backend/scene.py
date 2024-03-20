@@ -380,6 +380,7 @@ class Scene(object):
                     self.task.validate()
                 break
             except (BoundaryError, WaypointError) as e:
+                print("ERROR", e)
                 self.task.cleanup_()
                 self.task.restore_state(self._initial_task_state)
                 self._attempts += 1
@@ -676,7 +677,8 @@ class Scene(object):
                 text_ob, texture = self.pyrep.create_texture(file)
                 try:
                     obj.set_texture(texture, **TEX_KWARGS)
-                except RuntimeError:
+                except RuntimeError as e:
+                    print("ERROR", e)
                     ungrouped = obj.ungroup()
                     for o in ungrouped:
                         o.set_texture(texture, **TEX_KWARGS)
@@ -686,7 +688,8 @@ class Scene(object):
             for obj in arm_obj_list + gripper_obj_list:
                 try:
                     obj.remove_texture()
-                except RuntimeError:
+                except RuntimeError as e:
+                    print("ERROR", e)
                     ungrouped = obj.ungroup()
                     for o in ungrouped:
                         o.remove_texture()
@@ -724,7 +727,8 @@ class Scene(object):
                 try:
                     obj.set_texture(texture, **TEX_KWARGS)
                     # obj.set_color([random.random(), random.random(), random.random()])
-                except RuntimeError:
+                except RuntimeError as e:
+                    print("ERROR", e)
                     ungrouped = obj.ungroup()
                     for o in ungrouped:
                         # obj.set_color(
@@ -740,7 +744,8 @@ class Scene(object):
             for obj in tree:
                 try:
                     obj.remove_texture()
-                except RuntimeError:
+                except RuntimeError as e:
+                    print("ERROR", e)
                     pass
 
         if self._remove_background:
@@ -752,13 +757,15 @@ class Scene(object):
                         obj.set_renderable(False)
                         obj.set_transparency(1.)
                         obj.set_color([1.0, 1.0, 1.0, 0.0])
-                    except: 
+                    except Exception as e: 
+                        print("ERROR", e)
                         pass
                     try:
                         shape = Shape(obj.get_object_name(obj._handle))
                         shape.remove_texture()
                         shape.set_transparency(1.)
-                    except: 
+                    except Exception as e: 
+                        print("ERROR", e)
                         pass
 
     def step(self):
@@ -768,6 +775,7 @@ class Scene(object):
         self.task.step()
         if self._step_callback is not None:
             self._step_callback()
+        return 
 
     def register_step_callback(self, func):
         self._step_callback = func
@@ -795,9 +803,7 @@ class Scene(object):
         demo_randomize = [] if randomize else None
         if record:
             self.pyrep.step()  # Need this here or get_force doesn't work...
-            demo.append(self.get_observation(texture=self.default_texture))
-            if randomize:
-                demo_randomize.append(self.get_observation(texture=self.input_texture))
+            self._demo_record_step(demo, record, callable_each_step, demo_randomize)
         while True:
             success = False
             for i, point in enumerate(waypoints):
@@ -904,7 +910,7 @@ class Scene(object):
             for _ in range(10):
                 self.pyrep.step()
                 self.task.step()
-                self._demo_record_step(demo, record, callable_each_step)
+                demo, _ = self._demo_record_step(demo, record, callable_each_step)
                 success, term = self.task.success()
                 if success:
                     break
@@ -929,14 +935,19 @@ class Scene(object):
         )
 
     def _demo_record_step(self, demo_list, record, func, demo_randomize_list=None):
+        if func is None: func = lambda x: x
+
         if record:
-            demo_list.append(self.get_observation(texture=self.default_texture))
+            demo_list.append(
+                func(self.get_observation(texture=self.default_texture))
+            )
             if demo_randomize_list is not None:
                 demo_randomize_list.append(
-                    self.get_observation(texture=self.input_texture)
+                    func(self.get_observation(texture=self.input_texture))
                 )
-        if func is not None:
-            func(self.get_observation(texture=self.default_texture))
+        # if func is not None:
+        #     func(self.get_observation(texture=self.default_texture))
+        return demo_list, demo_randomize_list
 
     def _set_camera_properties(self) -> None:
         def _set_rgb_props(

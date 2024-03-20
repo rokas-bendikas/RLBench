@@ -33,7 +33,7 @@ action_mode = MoveArmThenGripper(
     arm_action_mode=JointVelocity(), gripper_action_mode=Discrete())
 env = Environment(
     action_mode, DATASET, obs_config, 
-    headless=False,
+    headless=True,
     shaped_rewards=True, 
     remove_background = True,
 )
@@ -42,7 +42,17 @@ env.launch()
 
 task = env.get_task(StackWine)
 
-demos = task.get_demos(0, live_demos=live_demos)
+demos, demos_randomize = task.get_demos(
+                                1, 
+                                live_demos=live_demos, 
+                                expose_rewards=True
+                            )
+
+def test_show_demo_rewards(demos):
+    for d in demos:
+        print('Demo length: ', len(d))
+        for obs in d:
+            print(obs.reward)
 
 agent = Agent(env.action_shape)
 agent.ingest(demos)
