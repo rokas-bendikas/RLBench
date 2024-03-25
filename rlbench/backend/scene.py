@@ -1254,6 +1254,7 @@ class AdditionalViewScene(Scene):
                 self._cams[cam_name] = VisionSensor(cam_name)
                 self._cams[cam_name].set_explicit_handling(value=1)
                 self._cam_masks[f"{cam_name}"] = VisionSensor(f"{cam_name}_mask")
+                self._cam_masks[f"{cam_name}"].set_explicit_handling(value=1)
 
         # self._cam_masks = {
         #     key: VisionSensor(f"{key}_mask") for key in self._obs_config.cameras.keys()

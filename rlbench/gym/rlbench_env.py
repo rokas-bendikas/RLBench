@@ -21,7 +21,7 @@ class RLBenchEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"]}
 
     def __init__(
-        self, task_class, observation_mode="state", render_mode: Union[None, str] = None
+        self, task_class, observation_mode="state", render_mode: Union[None, str] = None, **kwargs
     ):
         self._observation_mode = observation_mode
         self._render_mode = render_mode
@@ -35,7 +35,7 @@ class RLBenchEnv(gym.Env):
             raise ValueError("Unrecognised observation_mode: %s." % observation_mode)
 
         action_mode = MoveArmThenGripper(JointVelocity(), Discrete())
-        self.env = Environment(action_mode, obs_config=obs_config, headless=True)
+        self.env = Environment(action_mode, obs_config=obs_config, headless=True, **kwargs)
         self.env.launch()
         self.task = self.env.get_task(task_class)
 
