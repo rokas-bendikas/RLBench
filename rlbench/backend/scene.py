@@ -1385,9 +1385,7 @@ class AdditionalViewScene(Scene):
 
 
     def _set_camera_properties(self) -> None:
-        def _set_rgb_props(
-            rgb_cam: VisionSensor, rgb: bool, depth: bool, conf: CameraConfig
-        ):
+        def _set_rgb_props():
             def _set_rgb_props(rgb_cam: VisionSensor,
                             rgb: bool, depth: bool, conf: CameraConfig):
                 if not (rgb or depth or conf.point_cloud):
@@ -1410,7 +1408,9 @@ class AdditionalViewScene(Scene):
             for key, cam in self._cam_masks.items():
                 obs_config = self._obs_config.cameras[key]
                 _set_mask_props(cam, obs_config.mask, obs_config)
-
+        
+        _set_rgb_props()
+        
     def _get_misc(self):
         def _get_cam_data(cam: VisionSensor, name: str):
             d = {}
