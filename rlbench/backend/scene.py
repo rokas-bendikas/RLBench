@@ -478,6 +478,10 @@ class Scene(object):
         self.task.set_initial_objects_in_scene()
         
         self.reset_random_camera_poses()
+    
+    def reset_random_camera_poses(self):
+        # For scene without additional cameras, this is not defined
+        pass
 
     def get_observation(self, texture="default") -> Observation:
         tip = self.robot.arm.get_tip()
