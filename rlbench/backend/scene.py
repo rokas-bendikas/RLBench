@@ -26,7 +26,11 @@ from rlbench.backend.task import Task
 from rlbench.backend.utils import rgb_handles_to_mask
 from rlbench.demo import Demo
 from rlbench.noise_model import NoiseModel
-from rlbench.observation_config import AdditionalViewObservationConfig, ObservationConfig, CameraConfig
+from rlbench.observation_config import (
+    AdditionalViewObservationConfig,
+    ObservationConfig,
+    CameraConfig,
+)
 
 from rlbench.sim2real.domain_randomization import (
     RandomizeEvery,
@@ -42,7 +46,7 @@ BACKGROUND_OBJECTS = [
     "Wall4",
 ]
 FLOOR_OBJECTS = ["Floor"]
-SCENE_OBJECTS =  BACKGROUND_OBJECTS + FLOOR_OBJECTS + ["diningTable_visible"] 
+SCENE_OBJECTS = BACKGROUND_OBJECTS + FLOOR_OBJECTS + ["diningTable_visible"]
 
 TEX_KWARGS = {
     "mapping_mode": TextureMappingMode.PLANE,
@@ -52,7 +56,6 @@ TEX_KWARGS = {
 }
 
 
-
 def look_at(robot_pos, camera_pos):
     # Compute the forward vector (from the camera to the robot)
     forward = robot_pos - camera_pos
@@ -60,7 +63,7 @@ def look_at(robot_pos, camera_pos):
 
     # Define the world's up vector
     world_up = np.array([0, 0, 1])
-    
+
     # Check if the forward vector is close to the world's up or down direction
     if np.abs(np.dot(forward, world_up)) > 0.95:
         # Choose a different reference for the up vector if the forward vector is nearly aligned with the world_up
@@ -78,16 +81,14 @@ def look_at(robot_pos, camera_pos):
     up /= np.linalg.norm(up)  # Normalize
 
     # Construct the rotation matrix
-    rot_matrix = np.array([
-        right,     # First column
-        up,        # Second column
-        forward    # Third column
-    ]).T
+    rot_matrix = np.array(
+        [right, up, forward]  # First column  # Second column  # Third column
+    ).T
 
     # Convert to quaternion
     rot_quaternion = R.from_matrix(rot_matrix).as_quat()  # Returns (x, y, z, w)
     return rot_quaternion
-    
+
 
 def sample_random_pose(robot_pos):
     """Samples a random pose of a camera on the upper hemisphere."""
@@ -114,6 +115,7 @@ def sample_random_pose(robot_pos):
 
     return np.r_[camera_position, look_at_origin]
 
+
 class Scene(object):
     """Controls what is currently in the vrep scene. This is used for making
     sure that the tasks are easily reachable. This may be just replaced by
@@ -130,7 +132,7 @@ class Scene(object):
         default_texture: str = "default",
         input_texture: str = "random",
         randomize_every: RandomizeEvery = None,
-        remove_background : bool = False
+        remove_background: bool = False,
     ):
         self.pyrep = pyrep
         self.robot = robot
@@ -220,26 +222,29 @@ class Scene(object):
 
     def remove_background(self):
         global SCENE_OBJECTS
-        SCENE_OBJECTS = [s for s in SCENE_OBJECTS \
-                        if s not in BACKGROUND_OBJECTS \
-                        #   and s not in FLOOR_OBJECTS
-                        ]
-        objects = self.pyrep.get_objects_in_tree() 
+        SCENE_OBJECTS = [
+            s
+            for s in SCENE_OBJECTS
+            if s not in BACKGROUND_OBJECTS  #   and s not in FLOOR_OBJECTS
+        ]
+        objects = self.pyrep.get_objects_in_tree()
         for obj in objects:
             if obj.get_object_name(obj._handle) in BACKGROUND_OBJECTS:
-                print(f"Removing object {obj.get_object_name(obj._handle)} from background")
+                print(
+                    f"Removing object {obj.get_object_name(obj._handle)} from background"
+                )
                 obj.remove()
-            
+
             if "Floor" in obj.get_object_name(obj._handle):
-            # if obj.get_object_name(obj._handle) in FLOOR_OBJECTS:
+                # if obj.get_object_name(obj._handle) in FLOOR_OBJECTS:
                 print(f"Making object {obj.get_object_name(obj._handle)} transparent")
                 try:
                     obj.set_renderable(False)
                     obj.set_transparency(True)
                     obj.set_color([1.0, 1.0, 1.0, 0.0])
                     obj.scale_object(0.5, 0.5, 0.5)
-                except Exception as e: 
-                    print (e)
+                except Exception as e:
+                    print(e)
                     pass
                 # obj.remove()
 
@@ -412,10 +417,14 @@ class Scene(object):
         self._has_init_task = True
         self._variation_index = 0
 
-    def init_episode(self, index: int, randomly_place: bool=True,
-                     max_attempts: int = 5, place_demo: bool = False) -> List[str]:
-        """Calls the task init_episode and puts randomly in the workspace.
-        """
+    def init_episode(
+        self,
+        index: int,
+        randomly_place: bool = True,
+        max_attempts: int = 5,
+        place_demo: bool = False,
+    ) -> List[str]:
+        """Calls the task init_episode and puts randomly in the workspace."""
 
         self._variation_index = index
 
@@ -433,8 +442,7 @@ class Scene(object):
         while self._attempts < max_attempts:
             descriptions = self.task.init_episode(index)
             try:
-                if (randomly_place and
-                        not self.task.is_static_workspace()):
+                if randomly_place and not self.task.is_static_workspace():
                     self._place_task()
                     if self.robot.arm.check_arm_collision():
                         raise BoundaryError()
@@ -476,12 +484,10 @@ class Scene(object):
             self.task.cleanup_()
             self.task.restore_state(self._initial_task_state)
         self.task.set_initial_objects_in_scene()
-        
-        self.reset_random_camera_poses()
-    
+
     def reset_random_camera_poses(self):
         # For scene without additional cameras, this is not defined
-        pass
+        raise NotImplementedError
 
     def get_observation(self, texture="default") -> Observation:
         tip = self.robot.arm.get_tip()
@@ -545,7 +551,6 @@ class Scene(object):
                 mask = mask_fn(sensor.capture_rgb())
             return mask
 
-
         lsc_ob = self._obs_config.left_shoulder_camera
         rsc_ob = self._obs_config.right_shoulder_camera
         oc_ob = self._obs_config.overhead_camera
@@ -556,7 +561,7 @@ class Scene(object):
             (rgb_handles_to_mask if c.masks_as_one_channel else lambda x: x)
             for c in [lsc_ob, rsc_ob, oc_ob, wc_ob, fc_ob]
         ]
-            
+
         left_shoulder_rgb, left_shoulder_depth, left_shoulder_pcd = get_rgb_depth(
             self._cam_over_shoulder_left,
             lsc_ob.rgb,
@@ -702,20 +707,24 @@ class Scene(object):
             misc=self._get_misc(),
         )
         obs = self.task.decorate_observation(obs)
-    
+
         return obs
 
     def _change_texture(self, texture):
         assert texture in ["default", "real_proxy", "canonical", "random"]
         if texture == "default":
-            background_obj_list = [Shape(name) for name in self._static_scene_objects_names]
+            background_obj_list = [
+                Shape(name) for name in self._static_scene_objects_names
+            ]
             obj_list = background_obj_list
             for default_color, obj in zip(self._default_colorset, obj_list):
                 obj.set_color(default_color)
                 # text_ob.remove()
 
         elif texture == "real_proxy":
-            background_obj_list = [Shape(name) for name in self._static_scene_objects_names]
+            background_obj_list = [
+                Shape(name) for name in self._static_scene_objects_names
+            ]
             obj_list = background_obj_list
             colorset = [[1.0, 1.0, 1.0]] * len(obj_list)
             for default_color, obj in zip(colorset, obj_list):
@@ -819,20 +828,22 @@ class Scene(object):
         if self._remove_background:
             for obj in self.pyrep.get_objects_in_tree():
                 if "Floor" in obj.get_object_name(obj._handle):
-                # if obj.get_object_name(obj._handle) in FLOOR_OBJECTS:
-                    print(f"Making object {obj.get_object_name(obj._handle)} transparent")
+                    # if obj.get_object_name(obj._handle) in FLOOR_OBJECTS:
+                    print(
+                        f"Making object {obj.get_object_name(obj._handle)} transparent"
+                    )
                     try:
                         obj.set_renderable(False)
-                        obj.set_transparency(1.)
+                        obj.set_transparency(1.0)
                         obj.set_color([1.0, 1.0, 1.0, 0.0])
-                    except Exception as e: 
+                    except Exception as e:
                         print("ERROR", e)
                         pass
                     try:
                         shape = Shape(obj.get_object_name(obj._handle))
                         shape.remove_texture()
-                        shape.set_transparency(1.)
-                    except Exception as e: 
+                        shape.set_transparency(1.0)
+                    except Exception as e:
                         print("ERROR", e)
                         pass
 
@@ -843,7 +854,7 @@ class Scene(object):
         self.task.step()
         if self._step_callback is not None:
             self._step_callback()
-        return 
+        return
 
     def register_step_callback(self, func):
         self._step_callback = func
@@ -906,7 +917,9 @@ class Scene(object):
                 while not done:
                     done = path.step()
                     self.step()
-                    self._execute_demo_joint_position_action = path.get_executed_joint_position_action()
+                    self._execute_demo_joint_position_action = (
+                        path.get_executed_joint_position_action()
+                    )
                     self._demo_record_step(
                         demo, record, callable_each_step, demo_randomize
                     )
@@ -1003,12 +1016,11 @@ class Scene(object):
         )
 
     def _demo_record_step(self, demo_list, record, func, demo_randomize_list=None):
-        if func is None: func = lambda x: x
+        if func is None:
+            func = lambda x: x
 
         if record:
-            demo_list.append(
-                func(self.get_observation(texture=self.default_texture))
-            )
+            demo_list.append(func(self.get_observation(texture=self.default_texture)))
             if demo_randomize_list is not None:
                 demo_randomize_list.append(
                     func(self.get_observation(texture=self.input_texture))
@@ -1090,6 +1102,7 @@ class Scene(object):
             self._obs_config.front_camera.mask,
             self._obs_config.front_camera,
         )
+
     def _place_task(self) -> None:
         self._workspace_boundary.clear()
         # Find a place in the robot workspace for task
@@ -1137,7 +1150,8 @@ class AdditionalViewScene(Scene):
         default_texture: str = "default",
         input_texture: str = "random",
         randomize_every: RandomizeEvery = None,
-        remove_background : bool = False
+        remove_background: bool = False,
+        randomize_cameras: bool = False,
     ):
         self.pyrep = pyrep
         self.robot = robot
@@ -1210,6 +1224,7 @@ class AdditionalViewScene(Scene):
         self.input_texture = input_texture
 
         self._remove_background = remove_background
+        self._randomize_cameras = randomize_cameras
         if self._remove_background:
             self.remove_background()
         self._static_scene_objects_names = SCENE_OBJECTS
@@ -1224,12 +1239,11 @@ class AdditionalViewScene(Scene):
 
         self.cur_texture = None
         self.randomize_every = randomize_every
-        
+
         self._execute_demo_joint_position_action = None
 
     def _setup_cameras(self) -> None:
         """Sets up the cameras for the scene."""
-
 
         self._cams = {}
         self._cam_masks = {}
@@ -1240,11 +1254,15 @@ class AdditionalViewScene(Scene):
         for cam_name in self._obs_config.cameras.keys():
             if "cam_additional_" in cam_name:
                 # Add the camera to the scene
-                cam_rgb = VisionSensor.create(self._obs_config.cameras[cam_name].image_size)
-                cam_mask = VisionSensor.create(self._obs_config.cameras[cam_name].image_size)
+                cam_rgb = VisionSensor.create(
+                    self._obs_config.cameras[cam_name].image_size
+                )
+                cam_mask = VisionSensor.create(
+                    self._obs_config.cameras[cam_name].image_size
+                )
                 cam_placeholder = Dummy.create()
                 cam_placeholder.set_name(cam_name)
-                
+
                 cam_mask.set_parent(cam_rgb)
                 cam_mask.set_explicit_handling(value=1)
 
@@ -1274,11 +1292,10 @@ class AdditionalViewScene(Scene):
         robot_pos = self.robot.arm.get_position() + np.array([0.3, 0, 0])
 
         for cam_name in self._obs_config.cameras.keys():
-            if "cam_wrist" in cam_name or "wrist_cam" in cam_name: 
+            if "cam_wrist" in cam_name or "wrist_cam" in cam_name:
                 continue
             self._cams[cam_name].set_pose(sample_random_pose(robot_pos))
 
-            
     def get_observation(self, texture="default") -> Observation:
         tip = self.robot.arm.get_tip()
 
@@ -1342,8 +1359,9 @@ class AdditionalViewScene(Scene):
             return mask
 
         mask_fns = {
-            key: (rgb_handles_to_mask if c.masks_as_one_channel else lambda x: x
-            ) for key, c in self._obs_config.cameras.items()}
+            key: (rgb_handles_to_mask if c.masks_as_one_channel else lambda x: x)
+            for key, c in self._obs_config.cameras.items()
+        }
 
         rgbs = {}
         depths = {}
@@ -1352,8 +1370,14 @@ class AdditionalViewScene(Scene):
         for key, obs_c in self._obs_config.cameras.items():
             cam = self._cams[key]
             rgb, depth, pcd = get_rgb_depth(
-                cam, obs_c.rgb, obs_c.depth, obs_c.point_cloud,
-                obs_c.rgb_noise, obs_c.depth_noise, obs_c.depth_in_meters)
+                cam,
+                obs_c.rgb,
+                obs_c.depth,
+                obs_c.point_cloud,
+                obs_c.rgb_noise,
+                obs_c.depth_noise,
+                obs_c.depth_in_meters,
+            )
             rgbs[key] = rgb
             depths[key] = depth
             pcds[key] = pcd
@@ -1372,41 +1396,53 @@ class AdditionalViewScene(Scene):
             obs_point_cloud=pcds,
             joint_velocities=(
                 self._obs_config.joint_velocities_noise.apply(
-                    np.array(self.robot.arm.get_joint_velocities()))
-                if self._obs_config.joint_velocities else None),
+                    np.array(self.robot.arm.get_joint_velocities())
+                )
+                if self._obs_config.joint_velocities
+                else None
+            ),
             joint_positions=(
                 self._obs_config.joint_positions_noise.apply(
-                    np.array(self.robot.arm.get_joint_positions()))
-                if self._obs_config.joint_positions else None),
-            joint_forces=(joint_forces
-                        if self._obs_config.joint_forces else None),
+                    np.array(self.robot.arm.get_joint_positions())
+                )
+                if self._obs_config.joint_positions
+                else None
+            ),
+            joint_forces=(joint_forces if self._obs_config.joint_forces else None),
             gripper_open=(
                 (1.0 if self.robot.gripper.get_open_amount()[0] > 0.9 else 0.0)
-                if self._obs_config.gripper_open else None),
+                if self._obs_config.gripper_open
+                else None
+            ),
             gripper_pose=(
-                np.array(tip.get_pose())
-                if self._obs_config.gripper_pose else None),
+                np.array(tip.get_pose()) if self._obs_config.gripper_pose else None
+            ),
             gripper_matrix=(
-                tip.get_matrix()
-                if self._obs_config.gripper_matrix else None),
+                tip.get_matrix() if self._obs_config.gripper_matrix else None
+            ),
             gripper_touch_forces=(
-                ee_forces_flat
-                if self._obs_config.gripper_touch_forces else None),
+                ee_forces_flat if self._obs_config.gripper_touch_forces else None
+            ),
             gripper_joint_positions=(
                 np.array(self.robot.gripper.get_joint_positions())
-                if self._obs_config.gripper_joint_positions else None),
+                if self._obs_config.gripper_joint_positions
+                else None
+            ),
             task_low_dim_state=(
-                self.task.get_low_dim_state() if
-                self._obs_config.task_low_dim_state else None),
-            misc=self._get_misc())
+                self.task.get_low_dim_state()
+                if self._obs_config.task_low_dim_state
+                else None
+            ),
+            misc=self._get_misc(),
+        )
         obs = self.task.decorate_observation(obs)
         return obs
 
-
     def _set_camera_properties(self) -> None:
         def _set_rgb_props():
-            def _set_rgb_props(rgb_cam: VisionSensor,
-                            rgb: bool, depth: bool, conf: CameraConfig):
+            def _set_rgb_props(
+                rgb_cam: VisionSensor, rgb: bool, depth: bool, conf: CameraConfig
+            ):
                 if not (rgb or depth or conf.point_cloud):
                     rgb_cam.remove()
                 else:
@@ -1414,33 +1450,34 @@ class AdditionalViewScene(Scene):
                     rgb_cam.set_resolution(conf.image_size)
                     rgb_cam.set_render_mode(conf.render_mode)
 
-            def _set_mask_props(mask_cam: VisionSensor, mask: bool,
-                                conf: CameraConfig):
-                    if not mask:
-                        mask_cam.remove()
-                    else:
-                        mask_cam.set_explicit_handling(1)
-                        mask_cam.set_resolution(conf.image_size)
+            def _set_mask_props(mask_cam: VisionSensor, mask: bool, conf: CameraConfig):
+                if not mask:
+                    mask_cam.remove()
+                else:
+                    mask_cam.set_explicit_handling(1)
+                    mask_cam.set_resolution(conf.image_size)
+
             for key, cam in self._cams.items():
                 obs_config = self._obs_config.cameras[key]
                 _set_rgb_props(cam, obs_config.rgb, obs_config.depth, obs_config)
             for key, cam in self._cam_masks.items():
                 obs_config = self._obs_config.cameras[key]
                 _set_mask_props(cam, obs_config.mask, obs_config)
-        
+
         _set_rgb_props()
-        
+
     def _get_misc(self):
         def _get_cam_data(cam: VisionSensor, name: str):
             d = {}
             if cam.still_exists():
                 d = {
-                    '%s_extrinsics' % name: cam.get_matrix(),
-                    '%s_intrinsics' % name: cam.get_intrinsic_matrix(),
-                    '%s_near' % name: cam.get_near_clipping_plane(),
-                    '%s_far' % name: cam.get_far_clipping_plane(),
+                    "%s_extrinsics" % name: cam.get_matrix(),
+                    "%s_intrinsics" % name: cam.get_intrinsic_matrix(),
+                    "%s_near" % name: cam.get_near_clipping_plane(),
+                    "%s_far" % name: cam.get_far_clipping_plane(),
                 }
             return d
+
         misc = {}
         for key, cam in self._cams.items():
             misc.update(_get_cam_data(cam, key))
@@ -1452,6 +1489,16 @@ class AdditionalViewScene(Scene):
         misc.update({"variation_index": self._variation_index})
         if self._execute_demo_joint_position_action is not None:
             # Store the actual requested joint positions during demo collection
-            misc.update({"executed_demo_joint_position_action": self._execute_demo_joint_position_action})
+            misc.update(
+                {
+                    "executed_demo_joint_position_action": self._execute_demo_joint_position_action
+                }
+            )
             self._execute_demo_joint_position_action = None
         return misc
+
+    def reset(self) -> None:
+        """Resets the joint angles."""
+        super().reset()
+        if self._randomize_cameras:
+            self.reset_random_camera_poses()
